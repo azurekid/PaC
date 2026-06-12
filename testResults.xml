@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="40" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2026-06-12" time="10:31:09">
+  <environment os-version="25.6.0" clr-version="9.0.10" cwd="/Users/rogier/GitHub/PaC" machine-name="blackcat.local" platform="Darwin" user-domain="" nunit-version="2.5.8.0" user="rogier" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="0.5201" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="/Users/rogier/GitHub/PaC/Tests/PIM.Module.Tests.ps1" executed="True" result="Success" success="True" time="0.1889" asserts="0" description="/Users/rogier/GitHub/PaC/Tests/PIM.Module.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="PaC Module" executed="True" result="Success" success="True" time="0.0867" asserts="0" description="PaC Module">
+            <results>
+              <test-suite type="TestFixture" name="PaC Module.Module manifest" executed="True" result="Success" success="True" time="0.0613" asserts="0" description="PaC Module.Module manifest">
+                <results>
+                  <test-case description="Has a valid manifest" name="PaC Module.Module manifest.Has a valid manifest" time="0.0315" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Exports the expected public functions" name="PaC Module.Module manifest.Exports the expected public functions" time="0.0059" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Does not export private functions" name="PaC Module.Module manifest.Does not export private functions" time="0.0022" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Requires PowerShell 7.0 or later" name="PaC Module.Module manifest.Requires PowerShell 7.0 or later" time="0.0085" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/Users/rogier/GitHub/PaC/Tests/Public/Connect-PIM.Tests.ps1" executed="True" result="Success" success="True" time="0.0535" asserts="0" description="/Users/rogier/GitHub/PaC/Tests/Public/Connect-PIM.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Connect-PIM / Disconnect-PIM" executed="True" result="Success" success="True" time="0.0458" asserts="0" description="Connect-PIM / Disconnect-PIM">
+            <results>
+              <test-suite type="TestFixture" name="Connect-PIM / Disconnect-PIM.Pre-obtained access token" executed="True" result="Success" success="True" time="0.0148" asserts="0" description="Connect-PIM / Disconnect-PIM.Pre-obtained access token">
+                <results>
+                  <test-case description="Sets the PIM context without calling the token endpoint" name="Connect-PIM / Disconnect-PIM.Pre-obtained access token.Sets the PIM context without calling the token endpoint" time="0.0096" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Connect-PIM / Disconnect-PIM.Disconnect-PIM" executed="True" result="Success" success="True" time="0.025" asserts="0" description="Connect-PIM / Disconnect-PIM.Disconnect-PIM">
+                <results>
+                  <test-case description="Clears the context without error" name="Connect-PIM / Disconnect-PIM.Disconnect-PIM.Clears the context without error" time="0.0017" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Emits a warning when no session is active" name="Connect-PIM / Disconnect-PIM.Disconnect-PIM.Emits a warning when no session is active" time="0.0029" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Connect-PIM / Disconnect-PIM.Invoke-PIMGraphRequest without connection" executed="True" result="Success" success="True" time="0.0413" asserts="0" description="Connect-PIM / Disconnect-PIM.Invoke-PIMGraphRequest without connection">
+                <results>
+                  <test-case description="Throws a helpful error when not connected" name="Connect-PIM / Disconnect-PIM.Invoke-PIMGraphRequest without connection.Throws a helpful error when not connected" time="0.0148" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/Users/rogier/GitHub/PaC/Tests/Public/Invoke-PIMConfiguration.Tests.ps1" executed="True" result="Success" success="True" time="0.1603" asserts="0" description="/Users/rogier/GitHub/PaC/Tests/Public/Invoke-PIMConfiguration.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Invoke-PIMConfiguration" executed="True" result="Success" success="True" time="0.1412" asserts="0" description="Invoke-PIMConfiguration">
+            <results>
+              <test-suite type="TestFixture" name="Invoke-PIMConfiguration.JSON configuration with template reference" executed="True" result="Success" success="True" time="0.0814" asserts="0" description="Invoke-PIMConfiguration.JSON configuration with template reference">
+                <results>
+                  <test-case description="Reads the JSON file without error and calls Set-PIMRolePolicy for each role" name="Invoke-PIMConfiguration.JSON configuration with template reference.Reads the JSON file without error and calls Set-PIMRolePolicy for each role" time="0.068" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Parses the template and override correctly using Resolve-PIMTemplate internals" name="Invoke-PIMConfiguration.JSON configuration with template reference.Parses the template and override correctly using Resolve-PIMTemplate internals" time="0.0038" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-PIMConfiguration.JSON configuration with inline settings" executed="True" result="Success" success="True" time="0.0892" asserts="0" description="Invoke-PIMConfiguration.JSON configuration with inline settings">
+                <results>
+                  <test-case description="Reads inline settings without error" name="Invoke-PIMConfiguration.JSON configuration with inline settings.Reads inline settings without error" time="0.0051" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-PIMConfiguration.Separate template file" executed="True" result="Success" success="True" time="0.0955" asserts="0" description="Invoke-PIMConfiguration.Separate template file">
+                <results>
+                  <test-case description="Accepts a separate TemplateFile parameter" name="Invoke-PIMConfiguration.Separate template file.Accepts a separate TemplateFile parameter" time="0.0037" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-PIMConfiguration.TemplateDirectory with individual template files" executed="True" result="Success" success="True" time="0.1121" asserts="0" description="Invoke-PIMConfiguration.TemplateDirectory with individual template files">
+                <results>
+                  <test-case description="Loads templates from a directory using filename as template name" name="Invoke-PIMConfiguration.TemplateDirectory with individual template files.Loads templates from a directory using filename as template name" time="0.0091" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Resolves template by name derived from filename" name="Invoke-PIMConfiguration.TemplateDirectory with individual template files.Resolves template by name derived from filename" time="0.002" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-PIMConfiguration.Error handling" executed="True" result="Success" success="True" time="0.1246" asserts="0" description="Invoke-PIMConfiguration.Error handling">
+                <results>
+                  <test-case description="Throws on a non-existent configuration file" name="Invoke-PIMConfiguration.Error handling.Throws on a non-existent configuration file" time="0.0028" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Throws on an unsupported file extension" name="Invoke-PIMConfiguration.Error handling.Throws on an unsupported file extension" time="0.0058" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/Users/rogier/GitHub/PaC/Tests/Private/ConvertTo-PIMPolicyRules.Tests.ps1" executed="True" result="Success" success="True" time="0.069" asserts="0" description="/Users/rogier/GitHub/PaC/Tests/Private/ConvertTo-PIMPolicyRules.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="ConvertTo-PIMPolicyRules" executed="True" result="Success" success="True" time="0.0573" asserts="0" description="ConvertTo-PIMPolicyRules">
+            <results>
+              <test-suite type="TestFixture" name="ConvertTo-PIMPolicyRules.Activation duration (Expiration_EndUser_Assignment)" executed="True" result="Success" success="True" time="0.0179" asserts="0" description="ConvertTo-PIMPolicyRules.Activation duration (Expiration_EndUser_Assignment)">
+                <results>
+                  <test-case description="Generates an expiration rule with the correct duration" name="ConvertTo-PIMPolicyRules.Activation duration (Expiration_EndUser_Assignment).Generates an expiration rule with the correct duration" time="0.0131" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Sets isExpirationRequired to false when AllowPermanentActivation is true" name="ConvertTo-PIMPolicyRules.Activation duration (Expiration_EndUser_Assignment).Sets isExpirationRequired to false when AllowPermanentActivation is true" time="0.002" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Does not generate an expiration rule when no duration-related key is present" name="ConvertTo-PIMPolicyRules.Activation duration (Expiration_EndUser_Assignment).Does not generate an expiration rule when no duration-related key is present" time="0.0016" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="ConvertTo-PIMPolicyRules.Activation enablement (Enablement_EndUser_Assignment)" executed="True" result="Success" success="True" time="0.0292" asserts="0" description="ConvertTo-PIMPolicyRules.Activation enablement (Enablement_EndUser_Assignment)">
+                <results>
+                  <test-case description="Parses a comma-separated ActivationRequirement string" name="ConvertTo-PIMPolicyRules.Activation enablement (Enablement_EndUser_Assignment).Parses a comma-separated ActivationRequirement string" time="0.0028" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Handles a single requirement without a comma" name="ConvertTo-PIMPolicyRules.Activation enablement (Enablement_EndUser_Assignment).Handles a single requirement without a comma" time="0.0068" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="ConvertTo-PIMPolicyRules.Approval (Approval_EndUser_Assignment)" executed="True" result="Success" success="True" time="0.0384" asserts="0" description="ConvertTo-PIMPolicyRules.Approval (Approval_EndUser_Assignment)">
+                <results>
+                  <test-case description="Sets approval as required with a single user approver" name="ConvertTo-PIMPolicyRules.Approval (Approval_EndUser_Assignment).Sets approval as required with a single user approver" time="0.004" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Maps a group-type approver to groupMembers" name="ConvertTo-PIMPolicyRules.Approval (Approval_EndUser_Assignment).Maps a group-type approver to groupMembers" time="0.002" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Sets approvalMode to NoApproval when ApprovalRequired is false" name="ConvertTo-PIMPolicyRules.Approval (Approval_EndUser_Assignment).Sets approvalMode to NoApproval when ApprovalRequired is false" time="0.0018" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="ConvertTo-PIMPolicyRules.Eligibility expiration (Expiration_Admin_Eligibility)" executed="True" result="Success" success="True" time="0.043" asserts="0" description="ConvertTo-PIMPolicyRules.Eligibility expiration (Expiration_Admin_Eligibility)">
+                <results>
+                  <test-case description="Generates an eligibility expiration rule" name="ConvertTo-PIMPolicyRules.Eligibility expiration (Expiration_Admin_Eligibility).Generates an eligibility expiration rule" time="0.0022" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Disables expiration when AllowPermanentEligibility is true" name="ConvertTo-PIMPolicyRules.Eligibility expiration (Expiration_Admin_Eligibility).Disables expiration when AllowPermanentEligibility is true" time="0.0014" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="ConvertTo-PIMPolicyRules.Notification rules" executed="True" result="Success" success="True" time="0.0491" asserts="0" description="ConvertTo-PIMPolicyRules.Notification rules">
+                <results>
+                  <test-case description="Generates a notification rule for Notification_Activation_Alert" name="ConvertTo-PIMPolicyRules.Notification rules.Generates a notification rule for Notification_Activation_Alert" time="0.0032" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Generates a notification rule for Notification_Eligibility_Admin" name="ConvertTo-PIMPolicyRules.Notification rules.Generates a notification rule for Notification_Eligibility_Admin" time="0.0018" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="ConvertTo-PIMPolicyRules.Empty settings" executed="True" result="Success" success="True" time="0.0511" asserts="0" description="ConvertTo-PIMPolicyRules.Empty settings">
+                <results>
+                  <test-case description="Returns an empty array when no known settings keys are present" name="ConvertTo-PIMPolicyRules.Empty settings.Returns an empty array when no known settings keys are present" time="0.0012" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="ConvertTo-PIMPolicyRules.Full settings block" executed="True" result="Success" success="True" time="0.0558" asserts="0" description="ConvertTo-PIMPolicyRules.Full settings block">
+                <results>
+                  <test-case description="Generates all expected rules for a complete HighSecurity-style settings block" name="ConvertTo-PIMPolicyRules.Full settings block.Generates all expected rules for a complete HighSecurity-style settings block" time="0.0038" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/Users/rogier/GitHub/PaC/Tests/Private/Resolve-PIMTemplate.Tests.ps1" executed="True" result="Success" success="True" time="0.0486" asserts="0" description="/Users/rogier/GitHub/PaC/Tests/Private/Resolve-PIMTemplate.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Resolve-PIMTemplate" executed="True" result="Success" success="True" time="0.0421" asserts="0" description="Resolve-PIMTemplate">
+            <results>
+              <test-suite type="TestFixture" name="Resolve-PIMTemplate.Template resolution (PolicySource = template)" executed="True" result="Success" success="True" time="0.0246" asserts="0" description="Resolve-PIMTemplate.Template resolution (PolicySource = template)">
+                <results>
+                  <test-case description="Returns template settings when no override is specified" name="Resolve-PIMTemplate.Template resolution (PolicySource = template).Returns template settings when no override is specified" time="0.0026" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Applies scalar overrides over template values" name="Resolve-PIMTemplate.Template resolution (PolicySource = template).Applies scalar overrides over template values" time="0.004" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Merges nested hashtable overrides (e.g. notification blocks)" name="Resolve-PIMTemplate.Template resolution (PolicySource = template).Merges nested hashtable overrides (e.g. notification blocks)" time="0.0031" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Does not mutate the original template" name="Resolve-PIMTemplate.Template resolution (PolicySource = template).Does not mutate the original template" time="0.004" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Throws when the template name is not found" name="Resolve-PIMTemplate.Template resolution (PolicySource = template).Throws when the template name is not found" time="0.0071" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Throws when template name is missing" name="Resolve-PIMTemplate.Template resolution (PolicySource = template).Throws when template name is missing" time="0.0021" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Resolve-PIMTemplate.Inline resolution (PolicySource = inline)" executed="True" result="Success" success="True" time="0.0302" asserts="0" description="Resolve-PIMTemplate.Inline resolution (PolicySource = inline)">
+                <results>
+                  <test-case description="Returns the inline settings directly" name="Resolve-PIMTemplate.Inline resolution (PolicySource = inline).Returns the inline settings directly" time="0.0022" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="Throws when Settings block is missing" name="Resolve-PIMTemplate.Inline resolution (PolicySource = inline).Throws when Settings block is missing" time="0.0021" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Resolve-PIMTemplate.Default PolicySource behaviour" executed="True" result="Success" success="True" time="0.0375" asserts="0" description="Resolve-PIMTemplate.Default PolicySource behaviour">
+                <results>
+                  <test-case description="Defaults to inline when PolicySource is omitted" name="Resolve-PIMTemplate.Default PolicySource behaviour.Defaults to inline when PolicySource is omitted" time="0.0015" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Resolve-PIMTemplate.Unknown PolicySource" executed="True" result="Success" success="True" time="0.0409" asserts="0" description="Resolve-PIMTemplate.Unknown PolicySource">
+                <results>
+                  <test-case description="Throws for an unknown PolicySource value" name="Resolve-PIMTemplate.Unknown PolicySource.Throws for an unknown PolicySource value" time="0.0022" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

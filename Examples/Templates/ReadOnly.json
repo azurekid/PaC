@@ -1,0 +1,11 @@
+{
+  "ActivationDuration": "PT8H",
+  "ActivationRequirement": "Justification",
+  "ApprovalRequired": false,
+  "AllowPermanentEligibility": true,
+  "Notification_Activation_Alert": {
+    "isDefaultRecipientEnabled": false,
+    "notificationLevel": "Critical",
+    "Recipients": []
+  }
+}

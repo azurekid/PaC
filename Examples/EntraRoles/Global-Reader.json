@@ -1,0 +1,5 @@
+{
+  "RoleName": "Global Reader",
+  "PolicySource": "template",
+  "Template": "ReadOnly"
+}

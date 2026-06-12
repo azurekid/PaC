@@ -1,0 +1,12 @@
+{
+  "ActivationDuration": "PT8H",
+  "ActivationRequirement": "MultiFactorAuthentication,Justification",
+  "ApprovalRequired": false,
+  "AllowPermanentEligibility": false,
+  "MaximumEligibilityDuration": "P180D",
+  "Notification_Activation_Alert": {
+    "isDefaultRecipientEnabled": true,
+    "notificationLevel": "All",
+    "Recipients": []
+  }
+}

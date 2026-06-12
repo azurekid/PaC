@@ -1,0 +1,13 @@
+{
+  "RoleName": "Privileged Role Administrator",
+  "PolicySource": "template",
+  "Template": "HighSecurity",
+  "Override": {
+    "ActivationDuration": "PT2H",
+    "Notification_Activation_Alert": {
+      "isDefaultRecipientEnabled": true,
+      "notificationLevel": "All",
+      "Recipients": ["soc-alerts@contoso.com", "paim-team@contoso.com"]
+    }
+  }
+}

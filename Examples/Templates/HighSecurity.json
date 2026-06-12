@@ -1,0 +1,29 @@
+{
+  "ActivationDuration": "PT4H",
+  "ActivationRequirement": "MultiFactorAuthentication,Justification,Ticketing",
+  "ApprovalRequired": true,
+  "Approvers": [
+    {
+      "id": "11111111-2222-3333-4444-555555555555",
+      "description": "Privileged Access CAB",
+      "type": "group"
+    }
+  ],
+  "AllowPermanentEligibility": false,
+  "MaximumEligibilityDuration": "P30D",
+  "Notification_Activation_Alert": {
+    "isDefaultRecipientEnabled": true,
+    "notificationLevel": "All",
+    "Recipients": ["soc-alerts@contoso.com"]
+  },
+  "Notification_Activation_Admin": {
+    "isDefaultRecipientEnabled": true,
+    "notificationLevel": "All",
+    "Recipients": ["identity-team@contoso.com"]
+  },
+  "Notification_Eligibility_Alert": {
+    "isDefaultRecipientEnabled": true,
+    "notificationLevel": "All",
+    "Recipients": ["soc-alerts@contoso.com"]
+  }
+}

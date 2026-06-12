@@ -1,0 +1,16 @@
+{
+  "RoleName": "Reports Reader",
+  "PolicySource": "inline",
+  "Settings": {
+    "ActivationDuration": "PT4H",
+    "ActivationRequirement": "Justification",
+    "ApprovalRequired": false,
+    "AllowPermanentEligibility": false,
+    "MaximumEligibilityDuration": "P90D",
+    "Notification_Activation_Alert": {
+      "isDefaultRecipientEnabled": true,
+      "notificationLevel": "All",
+      "Recipients": []
+    }
+  }
+}

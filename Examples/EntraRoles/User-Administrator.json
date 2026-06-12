@@ -1,0 +1,5 @@
+{
+  "RoleName": "User Administrator",
+  "PolicySource": "template",
+  "Template": "Standard"
+}

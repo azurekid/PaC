@@ -1,0 +1,5 @@
+{
+  "RoleName": "Security Administrator",
+  "PolicySource": "template",
+  "Template": "HighSecurity"
+}
