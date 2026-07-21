@@ -8,27 +8,37 @@ function ConvertTo-PIMPolicyRules {
         PATCH /policies/roleManagementPolicies/{id}/rules/{ruleId} endpoint.
 
         Supported settings keys:
+
+          -- Activation (EndUser_Assignment) --
           ActivationDuration            - ISO 8601 duration (e.g. "PT4H")
-          ActivationRequirement         - Comma-separated list of enablement rules
+          AllowPermanentActivation      - Boolean; disables expiration when true
+          ActivationRequirement         - Comma-separated enablement rules
                                           (MultiFactorAuthentication, Justification, Ticketing)
           ApprovalRequired              - Boolean
           Approvers                     - Array of @{id; description; [type="user"|"group"]}
-          AllowPermanentEligibility     - Boolean
-          MaximumEligibilityDuration    - ISO 8601 duration (e.g. "P30D")
-          AllowPermanentActivation      - Boolean
-          MaximumActivationDuration     - Alias for ActivationDuration when AllowPermanentActivation is used
 
-          Notification_Activation_Alert
-          Notification_Activation_Assignee
-          Notification_Activation_Admin
-          Notification_Eligibility_Alert
-          Notification_Eligibility_Assignee
-          Notification_Eligibility_Admin
+          -- Eligible assignment (Admin_Eligibility) --
+          AllowPermanentEligibility     - Boolean; disables expiration when true
+          MaximumEligibilityDuration    - ISO 8601 duration (e.g. "P30D")
+
+          -- Active assignment (Admin_Assignment) --
+          AllowPermanentActiveAssignment    - Boolean; disables expiration when true
+          MaximumActiveAssignmentDuration   - ISO 8601 duration (e.g. "P15D")
+          ActiveAssignmentRequirement       - Comma-separated enablement rules
+                                             (MultiFactorAuthentication, Justification)
+
+          -- Notifications (Entra ID only supports Admin and Requestor; Alert is Azure RBAC only) --
+          Notification_Activation_Assignee   (EndUser_Assignment / Requestor)
+          Notification_Activation_Admin      (EndUser_Assignment / Admin)
+          Notification_Eligibility_Admin     (Admin_Eligibility / Admin)
+          Notification_Assignment_Assignee   (Admin_Assignment / Requestor)
+          Notification_Assignment_Admin      (Admin_Assignment / Admin)
 
           Each notification block:
             isDefaultRecipientEnabled   - Boolean
             notificationLevel           - "All" or "Critical"
             Recipients                  - Array of email addresses
+                                          (ignored when isDefaultRecipientEnabled is true)
     .PARAMETER Settings
         The merged settings hashtable to convert.
     .OUTPUTS
@@ -104,7 +114,6 @@ function ConvertTo-PIMPolicyRules {
         if ($isApprovalRequired) {
             $approvalStages = @(
                 @{
-                    '@odata.type'                    = '#microsoft.graph.unifiedApprovalStage'
                     'approvalStageTimeOutInDays'      = 1
                     'isApproverJustificationRequired' = $true
                     'escalationTimeInMinutes'         = 0
@@ -148,14 +157,47 @@ function ConvertTo-PIMPolicyRules {
     }
     #endregion
 
+    #region Active assignment expiration (Expiration_Admin_Assignment)
+    if ($Settings.ContainsKey('MaximumActiveAssignmentDuration') -or $Settings.ContainsKey('AllowPermanentActiveAssignment')) {
+        $isExpirationRequired = $true
+        $maximumDuration      = $Settings['MaximumActiveAssignmentDuration'] ?? 'P180D'
+
+        if ($Settings.ContainsKey('AllowPermanentActiveAssignment') -and $Settings['AllowPermanentActiveAssignment'] -eq $true) {
+            $isExpirationRequired = $false
+        }
+
+        $rules.Add(@{
+            '@odata.type'          = '#microsoft.graph.unifiedRoleManagementPolicyExpirationRule'
+            'id'                   = 'Expiration_Admin_Assignment'
+            'isExpirationRequired' = $isExpirationRequired
+            'maximumDuration'      = $maximumDuration
+        })
+    }
+    #endregion
+
+    #region Active assignment enablement (Enablement_Admin_Assignment)
+    if ($Settings.ContainsKey('ActiveAssignmentRequirement')) {
+        $raw          = $Settings['ActiveAssignmentRequirement']
+        $enabledRules = @($raw -split '[,\s]+' | Where-Object { $_ -ne '' })
+
+        $rules.Add(@{
+            '@odata.type'  = '#microsoft.graph.unifiedRoleManagementPolicyEnablementRule'
+            'id'           = 'Enablement_Admin_Assignment'
+            'enabledRules' = $enabledRules
+        })
+    }
+    #endregion
+
     #region Notification rules
+    # Note: Entra ID role policies only support "Admin" and "Requestor" recipient types.
+    # "Alert" recipient type is NOT valid for Entra ID (only for Azure RBAC).
+    # Notification_Alert_Admin_Eligibility and Notification_Alert_Admin_Assignment are also invalid for Entra ID.
     $notificationMap = @{
-        'Notification_Activation_Alert'        = @{ id = 'Notification_Alert_EndUser_Assignment';    recipientType = 'Alert';     notificationType = 'Email' }
-        'Notification_Activation_Assignee'     = @{ id = 'Notification_Requestor_EndUser_Assignment'; recipientType = 'Requestor'; notificationType = 'Email' }
-        'Notification_Activation_Admin'        = @{ id = 'Notification_Admin_EndUser_Assignment';    recipientType = 'Admin';     notificationType = 'Email' }
-        'Notification_Eligibility_Alert'       = @{ id = 'Notification_Alert_Admin_Eligibility';     recipientType = 'Alert';     notificationType = 'Email' }
-        'Notification_Eligibility_Assignee'    = @{ id = 'Notification_Requestor_Admin_Eligibility'; recipientType = 'Requestor'; notificationType = 'Email' }
-        'Notification_Eligibility_Admin'       = @{ id = 'Notification_Admin_Admin_Eligibility';     recipientType = 'Admin';     notificationType = 'Email' }
+        'Notification_Activation_Assignee'  = @{ id = 'Notification_Requestor_EndUser_Assignment'; recipientType = 'Requestor'; notificationType = 'Email'; targetCaller = 'EndUser'; targetLevel = 'Assignment' }
+        'Notification_Activation_Admin'     = @{ id = 'Notification_Admin_EndUser_Assignment';     recipientType = 'Admin';     notificationType = 'Email'; targetCaller = 'EndUser'; targetLevel = 'Assignment' }
+        'Notification_Eligibility_Admin'    = @{ id = 'Notification_Admin_Admin_Eligibility';      recipientType = 'Admin';     notificationType = 'Email'; targetCaller = 'Admin';   targetLevel = 'Eligibility' }
+        'Notification_Assignment_Assignee'  = @{ id = 'Notification_Requestor_Admin_Assignment';   recipientType = 'Requestor'; notificationType = 'Email'; targetCaller = 'Admin';   targetLevel = 'Assignment' }
+        'Notification_Assignment_Admin'     = @{ id = 'Notification_Admin_Admin_Assignment';       recipientType = 'Admin';     notificationType = 'Email'; targetCaller = 'Admin';   targetLevel = 'Assignment' }
     }
 
     foreach ($settingKey in $notificationMap.Keys) {
@@ -166,14 +208,30 @@ function ConvertTo-PIMPolicyRules {
             }
             $meta = $notificationMap[$settingKey]
 
+            $isDefaultRecipientsEnabled = [bool]($notifSettings['isDefaultRecipientEnabled'] ?? $true)
+            $recipients = @($notifSettings['Recipients'] ?? @())
+
+            # Graph doesn't allow both isDefaultRecipientsEnabled=true and custom recipients.
+            # When using default recipients, clear the custom recipients array.
+            if ($isDefaultRecipientsEnabled -eq $true) {
+                $recipients = @()
+            }
+
             $rules.Add(@{
                 '@odata.type'                = '#microsoft.graph.unifiedRoleManagementPolicyNotificationRule'
                 'id'                         = $meta.id
                 'notificationType'           = $meta.notificationType
                 'recipientType'              = $meta.recipientType
                 'notificationLevel'          = $notifSettings['notificationLevel'] ?? 'All'
-                'isDefaultRecipientsEnabled' = [bool]($notifSettings['isDefaultRecipientEnabled'] ?? $true)
-                'notificationRecipients'     = @($notifSettings['Recipients'] ?? @())
+                'isDefaultRecipientsEnabled' = $isDefaultRecipientsEnabled
+                'notificationRecipients'     = $recipients
+                'target'                     = @{
+                    'caller'              = $meta.targetCaller
+                    'operations'          = @('All')
+                    'level'               = $meta.targetLevel
+                    'inheritableSettings' = @()
+                    'enforcedSettings'    = @()
+                }
             })
         }
     }

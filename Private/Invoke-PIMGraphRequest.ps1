@@ -35,13 +35,16 @@ function Invoke-PIMGraphRequest {
         throw 'Not connected to Microsoft Graph. Run Connect-PIM first.'
     }
 
-    $baseUri = 'https://graph.microsoft.com/v1.0'
+    $token = Resolve-PIMAccessToken -InputObject $script:PIMContext.AccessToken
+    $script:PIMContext.AccessToken = $token
+
+    $baseUri = 'https://graph.microsoft.com/beta'
     if ($Uri -notmatch '^https?://') {
         $Uri = "$baseUri/$($Uri.TrimStart('/'))"
     }
 
     $headers = @{
-        Authorization  = "Bearer $($script:PIMContext.AccessToken)"
+        Authorization  = "Bearer $token"
         'Content-Type' = 'application/json'
         'Accept'       = 'application/json'
     }
@@ -54,6 +57,48 @@ function Invoke-PIMGraphRequest {
 
     if ($Body) {
         $params['Body'] = ($Body | ConvertTo-Json -Depth 20 -Compress)
+    }
+
+    function Get-GraphErrorFromException {
+        param([Parameter(Mandatory)] $ExceptionRecord)
+
+        if ($ExceptionRecord.ErrorDetails -and $ExceptionRecord.ErrorDetails.Message) {
+            try {
+                return ($ExceptionRecord.ErrorDetails.Message | ConvertFrom-Json -ErrorAction Stop)
+            }
+            catch { }
+        }
+
+        if ($ExceptionRecord.Exception.Response) {
+            try {
+                $reader  = [System.IO.StreamReader]::new($ExceptionRecord.Exception.Response.GetResponseStream())
+                $content = $reader.ReadToEnd()
+                if ($content) {
+                    return ($content | ConvertFrom-Json -ErrorAction Stop)
+                }
+            }
+            catch { }
+        }
+
+        return $null
+    }
+
+    function Get-PIMPermissionGuidance {
+        param(
+            [Parameter(Mandatory)] [string]$RequestMethod,
+            [Parameter(Mandatory)] [string]$RequestUri
+        )
+
+        $isRoleManagement = $RequestUri -match 'roleManagement/directory|roleManagementPolicies|roleManagementPolicyAssignments'
+        if (-not $isRoleManagement) {
+            return $null
+        }
+
+        if ($RequestMethod -eq 'GET') {
+            return 'Required Graph permissions (delegated or application): RoleManagement.Read.Directory (or RoleManagement.Read.All). For policy endpoints, RoleManagementPolicy.Read.Directory may also be required.'
+        }
+
+        return 'Required Graph permissions (delegated or application): RoleManagement.ReadWrite.Directory and, for policy endpoints, RoleManagementPolicy.ReadWrite.Directory.'
     }
 
     try {
@@ -79,20 +124,27 @@ function Invoke-PIMGraphRequest {
 
         return $response
     }
-    catch [System.Net.Http.HttpRequestException] {
-        Write-Error "Graph API request failed ($Method $Uri): $_"
-        throw
-    }
     catch {
-        $errorMessage = $_
-        if ($_.Exception.Response) {
-            try {
-                $reader  = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
-                $details = $reader.ReadToEnd() | ConvertFrom-Json -ErrorAction SilentlyContinue
-                $errorMessage = $details.error.message ?? $_
+        $graphError = Get-GraphErrorFromException -ExceptionRecord $_
+        $errorMessage = $_.Exception.Message
+
+        if ($graphError -and $graphError.error) {
+            $errorMessage = $graphError.error.message
+
+            $isPermissionScopeError = $graphError.error.code -eq 'PermissionScopeNotGranted' -or $graphError.error.message -match 'PermissionScopeNotGranted|Authorization failed due to missing permission scope'
+            if ($isPermissionScopeError) {
+                $guidance = Get-PIMPermissionGuidance -RequestMethod $Method -RequestUri $Uri
+                $recommendation = @(
+                    'Graph token does not include required role-management permissions.',
+                    $guidance,
+                    'If using delegated auth, reconnect with device code using an app registration that has these delegated permissions granted and admin consented.',
+                    'If using app-only auth, grant and admin-consent the corresponding application permissions on the app registration.'
+                ) -join ' '
+
+                throw "Graph API request failed ($Method $Uri): $errorMessage $recommendation"
             }
-            catch { }
         }
+
         Write-Error "Graph API request failed ($Method $Uri): $errorMessage"
         throw
     }
