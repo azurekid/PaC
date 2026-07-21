@@ -50,7 +50,7 @@ function Connect-PIM {
         [System.Security.SecureString]$ClientSecret,
 
         [Parameter(Mandatory, ParameterSetName = 'AccessToken')]
-        [string]$AccessToken,
+        [object]$AccessToken,
 
         [Parameter(Mandatory, ParameterSetName = 'DeviceCode')]
         [switch]$DeviceCode
@@ -87,7 +87,7 @@ function Connect-PIM {
         'DeviceCode' {
             $dcBody = @{
                 client_id = $ClientId
-                scope     = 'https://graph.microsoft.com/RoleManagement.ReadWrite.Directory offline_access'
+                scope     = 'https://graph.microsoft.com/RoleManagement.Read.Directory https://graph.microsoft.com/RoleManagement.ReadWrite.Directory https://graph.microsoft.com/RoleManagementPolicy.Read.Directory https://graph.microsoft.com/RoleManagementPolicy.ReadWrite.Directory offline_access'
             }
 
             try {
@@ -118,6 +118,7 @@ function Connect-PIM {
                             AuthMethod  = 'DeviceCode'
                         }
                         Write-Verbose "Connected to Microsoft Graph (tenant: $TenantId) via device code flow."
+                        Write-verbose "token: $($tokenResponse.access_token)"
                         return
                     }
                     catch {
@@ -135,14 +136,16 @@ function Connect-PIM {
         }
 
         'AccessToken' {
+            $normalizedToken = Resolve-PIMAccessToken -InputObject $AccessToken
             $script:PIMContext = @{
                 TenantId    = $null
                 ClientId    = $null
-                AccessToken = $AccessToken
+                AccessToken = $normalizedToken
                 ExpiresAt   = $null
                 AuthMethod  = 'AccessToken'
             }
             Write-Verbose "Connected to Microsoft Graph using a pre-obtained access token."
+            Write-Verbose "token: $normalizedToken"
         }
     }
 

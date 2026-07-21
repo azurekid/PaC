@@ -7,9 +7,10 @@ function Get-PIMRolePolicy {
         returns a simplified view of the key policy settings, suitable for
         inspection or comparison.
     .PARAMETER RoleName
-        One or more Entra ID role display names (e.g. 'Security Administrator').
+        Optional. One or more Entra ID role display names (e.g. 'Security Administrator').
+        If omitted, returns policy settings for all role policy assignments.
     .PARAMETER RoleDefinitionId
-        One or more Entra ID role definition GUIDs. Use this instead of RoleName
+        Optional. One or more Entra ID role definition GUIDs. Use this instead of RoleName
         when you already have the ID.
     .PARAMETER Raw
         Returns the full Graph API policy object (including all rules) instead of
@@ -28,7 +29,7 @@ function Get-PIMRolePolicy {
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     [OutputType([PSCustomObject])]
     param (
-        [Parameter(Mandatory, ParameterSetName = 'ByName', ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'ByName', ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [string[]]$RoleName,
 
         [Parameter(Mandatory, ParameterSetName = 'ById')]
@@ -40,21 +41,45 @@ function Get-PIMRolePolicy {
 
     process {
         $ids = [System.Collections.Generic.List[hashtable]]::new()
-
+        Write-Verbose "Retrieving role definitions for specified roles..."
         if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-            foreach ($name in $RoleName) {
-                $roleDef = Get-PIMRoleDefinition -DisplayName $name | Where-Object { $_.displayName -ieq $name }
-                if (-not $roleDef) {
-                    Write-Warning "Role '$name' was not found."
-                    continue
+            if ($RoleName -and $RoleName.Count -gt 0) {
+                foreach ($name in $RoleName) {
+                    $roleDef = Get-PIMRoleDefinition -DisplayName $name | Where-Object { $_.displayName -ieq $name }
+                    if (-not $roleDef) {
+                        Write-Warning "Role '$name' was not found."
+                        continue
+                    }
+                    Write-Output "Found role '$($roleDef.displayName)' with ID '$($roleDef.id)'."
+                    $ids.Add(@{ Id = $roleDef.id; Name = $roleDef.displayName })
                 }
-                $ids.Add(@{ Id = $roleDef.id; Name = $roleDef.displayName })
+            }
+            else {
+                Write-Verbose 'No RoleName provided. Retrieving all role policy assignments.'
+                $assignmentFilter = "scopeId eq '/' and scopeType eq 'DirectoryRole'"
+                $assignmentUri = "policies/roleManagementPolicyAssignments?`$filter=$([uri]::EscapeDataString($assignmentFilter))&`$select=roleDefinitionId"
+                $assignments = @(Invoke-PIMGraphRequest -Method GET -Uri $assignmentUri -ExpandNextLink)
+
+                $uniqueRoleIds = @($assignments |
+                    Where-Object { -not [string]::IsNullOrWhiteSpace($_.roleDefinitionId) } |
+                    Select-Object -ExpandProperty roleDefinitionId -Unique)
+
+                foreach ($id in $uniqueRoleIds) {
+                    try {
+                        $roleDef = Get-PIMRoleDefinition -RoleDefinitionId $id
+                        $ids.Add(@{ Id = $roleDef.id; Name = $roleDef.displayName })
+                    }
+                    catch {
+                        $ids.Add(@{ Id = $id; Name = $id })
+                    }
+                }
             }
         }
         else {
             foreach ($id in $RoleDefinitionId) {
                 try {
                     $roleDef = Get-PIMRoleDefinition -RoleDefinitionId $id
+                    Write-Verbose "Found role '$($roleDef.displayName)' with ID '$($roleDef.id)'."
                     $ids.Add(@{ Id = $roleDef.id; Name = $roleDef.displayName })
                 }
                 catch {
@@ -68,6 +93,7 @@ function Get-PIMRolePolicy {
                 $policy = Get-PIMRoleManagementPolicy -RoleDefinitionId $role.Id
 
                 if ($Raw) {
+                    Write-Verbose "Returning raw policy for role '$($role.Name)'."
                     $policy | Add-Member -NotePropertyName 'RoleName' -NotePropertyValue $role.Name -Force
                     Write-Output $policy
                     continue
