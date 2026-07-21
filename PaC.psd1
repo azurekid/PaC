@@ -13,7 +13,12 @@
         'Disconnect-PIM'
         'Get-PIMRoleDefinition'
         'Get-PIMRolePolicy'
+        'Get-PIMGroupPolicy'
+        'Export-PIMConfiguration'
+        'Restore-PIMConfiguration'
         'Set-PIMRolePolicy'
+        'Set-PIMGroupPolicy'
+        'Set-PIMRoleGroupAssignment'
         'Invoke-PIMConfiguration'
     )
 
