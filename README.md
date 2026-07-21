@@ -8,13 +8,13 @@ Configure PIM role policies from **JSON or YAML files** with support for **reusa
 
 ## Features
 
-- 📋 **Policy templates** — Define a set of PIM settings once, apply to many roles
-- 🔀 **Per-role overrides** — Extend or modify template settings for individual roles
-- 📁 **JSON & YAML input** — Configuration files in either format
-- 🔐 **Flexible authentication** — Service principal, device code flow, or pre-obtained token
-- 🔍 **Read & inspect** — Retrieve and display current PIM policy settings per role
-- ⚡ **Scale** — Apply settings to multiple roles in a single command
-- 🛡️ **WhatIf support** — Preview changes before applying them
+- **Policy templates** — Define a set of PIM settings once, apply to many roles
+- **Per-role overrides** — Extend or modify template settings for individual roles
+- **JSON & YAML input** — Configuration files in either format
+- **Flexible authentication** — Service principal, device code flow, or pre-obtained token
+- **Read & inspect** — Retrieve and display current PIM policy settings per role
+- **Scale** — Apply settings to multiple roles in a single command
+- **WhatIf support** — Preview changes before applying them
 
 ---
 
