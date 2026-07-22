@@ -24,18 +24,26 @@ function Get-PIMGroupManagementPolicy {
     )
 
     $assignmentCandidates = @(
-        "scopeId eq '/groups/$GroupId' and scopeType eq 'Group'"
+        "scopeId eq '$GroupId' and scopeType eq 'Group' and roleDefinitionId eq '$MemberType'"
+        "scopeId eq '/$GroupId' and scopeType eq 'Group' and roleDefinitionId eq '$MemberType'"
+        "scopeId eq '/groups/$GroupId' and scopeType eq 'Group' and roleDefinitionId eq '$MemberType'"
         "scopeId eq '$GroupId' and scopeType eq 'Group'"
         "scopeId eq '/$GroupId' and scopeType eq 'Group'"
+        "scopeId eq '/groups/$GroupId' and scopeType eq 'Group'"
     )
 
     $assignment = @()
     foreach ($candidateFilter in $assignmentCandidates) {
-        $assignmentUri = "policies/roleManagementPolicyAssignments?`$filter=$candidateFilter"
-        $candidate = Invoke-PIMGraphRequest -Method GET -Uri $assignmentUri -ExpandNextLink
-        if ($candidate -and $candidate.Count -gt 0) {
-            $assignment = @($candidate)
-            break
+        try {
+            $assignmentUri = "policies/roleManagementPolicyAssignments?`$filter=$([uri]::EscapeDataString($candidateFilter))"
+            $candidate = @(Invoke-PIMGraphRequest -Method GET -Uri $assignmentUri -ExpandNextLink)
+            if ($candidate.Count -gt 0) {
+                $assignment = @($candidate)
+                break
+            }
+        }
+        catch {
+            Write-Verbose "Group assignment lookup candidate failed; trying next scope format. Filter='$candidateFilter'. Error=$($_.Exception.Message)"
         }
     }
 

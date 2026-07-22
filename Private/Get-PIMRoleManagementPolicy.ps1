@@ -17,24 +17,33 @@ function Get-PIMRoleManagementPolicy {
         [string]$RoleDefinitionId
     )
 
+    $assignmentId = $null
+    $policyId = $null
     $filter = "scopeId eq '/' and scopeType eq 'DirectoryRole' and roleDefinitionId eq '$RoleDefinitionId'"
-    $assignmentUri = "policies/roleManagementPolicyAssignments?`$filter=$filter"
 
-    $assignment = Invoke-PIMGraphRequest -Method GET -Uri $assignmentUri -ExpandNextLink
-
-    if (-not $assignment -or $assignment.Count -eq 0) {
-        throw "No role management policy assignment found for role definition ID '$RoleDefinitionId'."
+    if ($script:PIMRolePolicyAssignmentCache -and $script:PIMRolePolicyAssignmentCache.ContainsKey($RoleDefinitionId)) {
+        $cachedAssignment = $script:PIMRolePolicyAssignmentCache[$RoleDefinitionId]
+        $assignmentId = [string]$cachedAssignment.id
+        $policyId = [string]$cachedAssignment.policyId
+        Write-Verbose "Using cached role policy assignment for role definition '$RoleDefinitionId'."
     }
 
-    $policyId  = $assignment[0].policyId
-    $assignmentId = $assignment | Where-Object { -not [string]::IsNullOrWhiteSpace($_.id) } | Select-Object -First 1 -ExpandProperty id
+    if ([string]::IsNullOrWhiteSpace($policyId)) {
+        $assignmentUri = "policies/roleManagementPolicyAssignments?`$filter=$filter"
+        $assignment = Invoke-PIMGraphRequest -Method GET -Uri $assignmentUri -ExpandNextLink
+
+        if (-not $assignment -or $assignment.Count -eq 0) {
+            throw "No role management policy assignment found for role definition ID '$RoleDefinitionId'."
+        }
+
+        $policyId  = $assignment[0].policyId
+        $assignmentId = $assignment | Where-Object { -not [string]::IsNullOrWhiteSpace($_.id) } | Select-Object -First 1 -ExpandProperty id
+    }
+
     $policyUri = "policies/roleManagementPolicies/$policyId"
 
-
-    # Fetch policy metadata first (stable), then fetch rules using multiple strategies.
-    # Some tenants intermittently return 500 or empty rules for one approach.
-    $policy = Invoke-PIMGraphRequest -Method GET -Uri $policyUri
-
+    # Try the expanded endpoint first to avoid an extra metadata-only GET when it works.
+    $policy = $null
     $rules = @()
     $effectiveRules = @()
 
@@ -42,6 +51,9 @@ function Get-PIMRoleManagementPolicy {
     $expandedPolicyUri = '{0}?$expand=rules,effectiveRules' -f $policyUri
     try {
         $expanded = Invoke-PIMGraphRequest -Method GET -Uri $expandedPolicyUri
+        if ($expanded) {
+            $policy = $expanded
+        }
         if ($expanded -and $null -ne $expanded.rules) {
             $rules = @($expanded.rules | Where-Object { $null -ne $_ })
         }
@@ -50,6 +62,11 @@ function Get-PIMRoleManagementPolicy {
         }
     }
     catch { }
+
+    # Fallback: retrieve the base policy when the expanded endpoint fails.
+    if (-not $policy) {
+        $policy = Invoke-PIMGraphRequest -Method GET -Uri $policyUri
+    }
 
     # Strategy 2: Direct rules collection
     if ($rules.Count -eq 0) {
