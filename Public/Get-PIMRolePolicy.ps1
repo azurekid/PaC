@@ -36,11 +36,16 @@ function Get-PIMRolePolicy {
         [string[]]$RoleDefinitionId,
 
         [Parameter()]
-        [switch]$Raw
+        [switch]$Raw,
+
+        [Parameter()]
+        [switch]$SuppressPermissionWarnings
     )
 
     process {
         $ids = [System.Collections.Generic.List[hashtable]]::new()
+        $permissionWarningShown = $false
+        $previousAssignmentCache = $script:PIMRolePolicyAssignmentCache
         Write-Verbose "Retrieving role definitions for specified roles..."
         if ($PSCmdlet.ParameterSetName -eq 'ByName') {
             if ($RoleName -and $RoleName.Count -gt 0) {
@@ -50,7 +55,7 @@ function Get-PIMRolePolicy {
                         Write-Warning "Role '$name' was not found."
                         continue
                     }
-                    Write-Output "Found role '$($roleDef.displayName)' with ID '$($roleDef.id)'."
+                    Write-Verbose "Found role '$($roleDef.displayName)' with ID '$($roleDef.id)'."
                     $ids.Add(@{ Id = $roleDef.id; Name = $roleDef.displayName })
                 }
             }
@@ -88,22 +93,68 @@ function Get-PIMRolePolicy {
             }
         }
 
-        foreach ($role in $ids) {
-            try {
-                $policy = Get-PIMRoleManagementPolicy -RoleDefinitionId $role.Id
+        try {
+            if ($ids.Count -gt 0) {
+                try {
+                    $assignmentFilter = "scopeId eq '/' and scopeType eq 'DirectoryRole'"
+                    $assignmentUri = "policies/roleManagementPolicyAssignments?`$filter=$([uri]::EscapeDataString($assignmentFilter))&`$select=id,roleDefinitionId,policyId"
+                    $assignments = @(Invoke-PIMGraphRequest -Method GET -Uri $assignmentUri -ExpandNextLink)
+                    $assignmentLookup = @{}
 
-                if ($Raw) {
-                    Write-Verbose "Returning raw policy for role '$($role.Name)'."
-                    $policy | Add-Member -NotePropertyName 'RoleName' -NotePropertyValue $role.Name -Force
-                    Write-Output $policy
-                    continue
+                    foreach ($assignment in $assignments) {
+                        $assignmentRoleId = [string]$assignment.roleDefinitionId
+                        $assignmentPolicyId = [string]$assignment.policyId
+                        if ([string]::IsNullOrWhiteSpace($assignmentRoleId) -or [string]::IsNullOrWhiteSpace($assignmentPolicyId)) {
+                            continue
+                        }
+
+                        if (-not $assignmentLookup.ContainsKey($assignmentRoleId)) {
+                            $assignmentLookup[$assignmentRoleId] = $assignment
+                        }
+                    }
+
+                    $script:PIMRolePolicyAssignmentCache = $assignmentLookup
+                    Write-Verbose "Cached role policy assignments for $($assignmentLookup.Count) role definition(s)."
                 }
+                catch {
+                    Write-Verbose 'Bulk role policy assignment cache unavailable. Falling back to per-role assignment lookups.'
+                }
+            }
 
-                Write-Output (ConvertFrom-PIMPolicyRules -Policy $policy -RoleName $role.Name)
+            $totalRoles = $ids.Count
+            $index = 0
+            foreach ($role in $ids) {
+                $index++
+                Write-Verbose "[$index/$totalRoles] Retrieving role policy for '$($role.Name)'."
+
+                try {
+                    $policy = Get-PIMRoleManagementPolicy -RoleDefinitionId $role.Id
+
+                    if ($Raw) {
+                        Write-Verbose "Returning raw policy for role '$($role.Name)'."
+                        $policy | Add-Member -NotePropertyName 'RoleName' -NotePropertyValue $role.Name -Force
+                        Write-Output $policy
+                        continue
+                    }
+
+                    Write-Output (ConvertFrom-PIMPolicyRules -Policy $policy -RoleName $role.Name)
+                }
+                catch {
+                    $isPermissionError = ([string]$_ -match 'Missing permissions in access token|PermissionScopeNotGranted|missing permission scope')
+                    if ($SuppressPermissionWarnings -and $isPermissionError) {
+                        if (-not $permissionWarningShown) {
+                            Write-Warning 'Insufficient Graph permissions to read one or more role policies. Showing this warning once and skipping remaining inaccessible roles.'
+                            $permissionWarningShown = $true
+                        }
+                        continue
+                    }
+
+                    Write-Warning "Could not retrieve policy for role '$($role.Name)': $_"
+                }
             }
-            catch {
-                Write-Warning "Could not retrieve policy for role '$($role.Name)': $_"
-            }
+        }
+        finally {
+            $script:PIMRolePolicyAssignmentCache = $previousAssignmentCache
         }
     }
 }
@@ -122,6 +173,8 @@ function ConvertFrom-PIMPolicyRules {
     $result = [ordered]@{
         RoleName                   = $RoleName
         PolicyId                   = $Policy.id
+        LastModifiedDateTime       = $Policy.lastModifiedDateTime
+        LastModifiedBy             = $Policy.lastModifiedBy
         ActivationDuration         = $null
         AllowPermanentActivation   = $null
         ActivationRequirements     = $null

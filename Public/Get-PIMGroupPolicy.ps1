@@ -23,11 +23,22 @@ function Get-PIMGroupPolicy {
         [string[]]$GroupId,
 
         [Parameter()]
-        [switch]$Raw
+        [switch]$Raw,
+
+        [Parameter()]
+        [switch]$SuppressPermissionWarnings
     )
 
     process {
         $groups = [System.Collections.Generic.List[hashtable]]::new()
+        $permissionWarningShown = $false
+
+        function Get-PIMGroupLookupUri {
+            param([Parameter(Mandatory)][string]$Id)
+
+            $safeId = [uri]::EscapeDataString($Id)
+            return ('groups/{0}?$select=id,displayName' -f $safeId)
+        }
 
         if ($PSCmdlet.ParameterSetName -eq 'ByName') {
             if ($GroupName -and $GroupName.Count -gt 0) {
@@ -73,8 +84,12 @@ function Get-PIMGroupPolicy {
                     Select-Object -Unique)
 
                 foreach ($id in $uniqueGroupIds) {
+                    if ([string]::IsNullOrWhiteSpace([string]$id)) {
+                        continue
+                    }
+
                     try {
-                        $group = Invoke-PIMGraphRequest -Method GET -Uri "groups/$id?`$select=id,displayName"
+                        $group = Invoke-PIMGraphRequest -Method GET -Uri (Get-PIMGroupLookupUri -Id ([string]$id))
                         $groups.Add(@{ Id = $group.id; Name = $group.displayName })
                     }
                     catch {
@@ -84,9 +99,14 @@ function Get-PIMGroupPolicy {
             }
         }
         else {
-            foreach ($id in $GroupId) {
+            $normalizedGroupIds = @($GroupId |
+                ForEach-Object { [string]$_ } |
+                Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+                Select-Object -Unique)
+
+            foreach ($id in $normalizedGroupIds) {
                 try {
-                    $group = Invoke-PIMGraphRequest -Method GET -Uri "groups/$id?`$select=id,displayName"
+                    $group = Invoke-PIMGraphRequest -Method GET -Uri (Get-PIMGroupLookupUri -Id $id)
                     $groups.Add(@{ Id = $group.id; Name = $group.displayName })
                 }
                 catch {
@@ -110,6 +130,8 @@ function Get-PIMGroupPolicy {
                     GroupName                  = $group.Name
                     GroupId                    = $group.Id
                     PolicyId                   = $policy.id
+                    LastModifiedDateTime       = $policy.lastModifiedDateTime
+                    LastModifiedBy             = $policy.lastModifiedBy
                     ActivationDuration         = $null
                     AllowPermanentActivation   = $null
                     ActivationRequirements     = $null
@@ -153,6 +175,15 @@ function Get-PIMGroupPolicy {
                 Write-Output ([PSCustomObject]$result)
             }
             catch {
+                $isPermissionError = ([string]$_ -match 'Missing permissions in access token|PermissionScopeNotGranted|missing permission scope')
+                if ($SuppressPermissionWarnings -and $isPermissionError) {
+                    if (-not $permissionWarningShown) {
+                        Write-Warning 'Insufficient Graph permissions to read one or more group policies. Showing this warning once and skipping remaining inaccessible groups.'
+                        $permissionWarningShown = $true
+                    }
+                    continue
+                }
+
                 Write-Warning "Could not retrieve group policy for '$($group.Name)': $_"
             }
         }
